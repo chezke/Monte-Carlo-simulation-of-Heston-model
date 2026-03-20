@@ -211,3 +211,4 @@ However, for small time steps, this issue is rare in
 practice. Nevertheless, it is a known numerical drawback 
 of the Euler scheme, as the true continuous model guarantees 
 positivity. (S_t = S_0 \exp(\text{something}))
+*/
