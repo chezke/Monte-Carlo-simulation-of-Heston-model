@@ -16,7 +16,7 @@ This repository aligns with that goal as follows:
 
 ## Google Colab
 
-README cannot *run* CUDA by itself; use the notebook below, which clones the repo and runs `make` on a **GPU** runtime.
+You may use the notebook below if you want, which clones the repo and runs `make` on a **GPU** runtime.
 
 1. Push this project to GitHub (notebook path must exist on the remote).
 2. Replace `OWNER` and `REPO` in the link with your GitHub user/org and repository name; change `main` if your default branch differs.
