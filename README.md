@@ -6,21 +6,24 @@ CUDA implementations for Sorbonne **Calcul haute performance** — Heston sectio
 
 > In this project, we aim to **compare three distinct methods** for simulating an **at-the-money call option** (where “at-the-money” means **$K = S_0 = 1$**) at maturity **T = 1** under the **Heston model**.
 
+The quantity of interest is:
+\[
+E[(S_1 - 1)_+]
+\]
+
 This repository aligns with that goal as follows:
 
 | Method | Program |
 |--------|---------|
 | Euler discretization | `MC_Euler` |
-| Exact variance simulation ([1], [2]) + Step‑3 log-price | `MC_exact` |
-| Same variance simulation + **almost-exact** log‑S scheme (Q3) | `MC_almost`, `MC_benchmark_Q3` |
+| Exact simulation of variance (Broadie–Kaya) | `MC_exact` |
+| Same variance simulation + almost-exact log-price scheme | `MC_almost`, `MC_benchmark_Q3` |
 
-## Google Colab
-
-You may use the notebook below if you want, which clones the repo and runs `make` on a **GPU** runtime.
+## Optional: run on GPU via Google Colab
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chezke/Monte-Carlo-simulation-of-Heston-model/blob/main/notebooks/heston_mc_colab.ipynb)
 
-Source notebook: [`notebooks/heston_mc_colab.ipynb`](notebooks/heston_mc_colab.ipynb) — edit `REPO_URL` and `PROJECT_SUBDIR` in the clone cell if your layout differs.
+Source notebook: [`notebooks/heston_mc_colab.ipynb`](notebooks/heston_mc_colab.ipynb).
 
 ## Layout
 
