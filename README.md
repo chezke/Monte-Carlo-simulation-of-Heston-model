@@ -2,7 +2,7 @@
 
 CUDA implementations for Sorbonne **Calcul haute performance** — Heston section of **Proj2026**.
 
-## Objective *(from the project statement)*
+## Objective
 
 > In this project, we aim to **compare three distinct methods** for simulating an **at-the-money call option** (where “at-the-money” means **K = S₀ = 1**) at maturity **T = 1** under the **Heston model**.
 
@@ -13,6 +13,19 @@ This repository aligns with that goal as follows:
 | Euler discretization | `MC_Euler` |
 | Exact variance simulation ([1], [2]) + Step‑3 log-price | `MC_exact` |
 | Same variance simulation + **almost-exact** log‑S scheme (Q3) | `MC_almost`, `MC_benchmark_Q3` |
+
+## Google Colab
+
+README cannot *run* CUDA by itself; use the notebook below, which clones the repo and runs `make` on a **GPU** runtime.
+
+1. Push this project to GitHub (notebook path must exist on the remote).
+2. Replace `OWNER` and `REPO` in the link with your GitHub user/org and repository name; change `main` if your default branch differs.
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chezke/Monte-Carlo-simulation-of-Heston-model/blob/main/notebooks/heston_mc_colab.ipynb)
+
+Source notebook: [`notebooks/heston_mc_colab.ipynb`](notebooks/heston_mc_colab.ipynb) — edit `REPO_URL` and `PROJECT_SUBDIR` in the clone cell if your layout differs.
+
+**Limits:** Colab needs a **public** repo for anonymous `git clone`, or you must add credentials. GPU type and CUDA/`nvcc` version depend on Colab’s image; if `make` fails, check `!which nvcc` and `!nvcc --version`.
 
 ## Layout
 
