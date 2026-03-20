@@ -18,14 +18,9 @@ This repository aligns with that goal as follows:
 
 You may use the notebook below if you want, which clones the repo and runs `make` on a **GPU** runtime.
 
-1. Push this project to GitHub (notebook path must exist on the remote).
-2. Replace `OWNER` and `REPO` in the link with your GitHub user/org and repository name; change `main` if your default branch differs.
-
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chezke/Monte-Carlo-simulation-of-Heston-model/blob/main/notebooks/heston_mc_colab.ipynb)
 
 Source notebook: [`notebooks/heston_mc_colab.ipynb`](notebooks/heston_mc_colab.ipynb) — edit `REPO_URL` and `PROJECT_SUBDIR` in the clone cell if your layout differs.
-
-**Limits:** Colab needs a **public** repo for anonymous `git clone`, or you must add credentials. GPU type and CUDA/`nvcc` version depend on Colab’s image; if `make` fails, check `!which nvcc` and `!nvcc --version`.
 
 ## Layout
 
