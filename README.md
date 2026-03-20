@@ -6,10 +6,7 @@ CUDA implementations for Sorbonne **Calcul haute performance** — Heston sectio
 
 > In this project, we aim to **compare three distinct methods** for simulating an **at-the-money call option** (where “at-the-money” means **$K = S_0 = 1$**) at maturity **T = 1** under the **Heston model**.
 
-The quantity of interest is:
-\[
-E[(S_1 - 1)_+]
-\]
+The quantity of interest is: $E[(S_1 - 1)_+]$.
 
 This repository aligns with that goal as follows:
 
@@ -47,12 +44,12 @@ make
 
 Executables are written to `bin/`:
 
-| Binary | Role |
-|--------|------|
-| `MC_Euler` | Q1–style Euler MC |
-| `MC_exact` | Exact variance path + Step-3 log-price (Proj steps 1–3) |
-| `MC_almost` | Exact variance + almost-exact **log S** (Q3 scheme) |
-| `MC_benchmark_Q3` | Parameter sweep: Euler vs almost-exact timings, **Δt = 1/1000** vs **1/30** |
+| Binary | Description |
+|--------|-------------|
+| `MC_Euler` | Euler discretization Monte Carlo (Q1) |
+| `MC_exact` | Exact simulation of variance (Broadie–Kaya), including steps 1–3: variance sampling, integral computation, and log-price reconstruction (Q2) |
+| `MC_almost` | Almost-exact log-price scheme based on exact variance simulation (Q3) |
+| `MC_benchmark_Q3` | Benchmark comparing Euler and almost-exact methods, including execution time and step size comparison (**Δt = 1/1000** vs **1/30**) |
 
 ### Manual `nvcc` (equivalent)
 
