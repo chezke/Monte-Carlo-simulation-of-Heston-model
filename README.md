@@ -4,7 +4,7 @@ CUDA implementations for Sorbonne **Calcul haute performance** — Heston sectio
 
 ## Objective
 
-> In this project, we aim to **compare three distinct methods** for simulating an **at-the-money call option** (where “at-the-money” means **K = S₀ = 1**) at maturity **T = 1** under the **Heston model**.
+> In this project, we aim to **compare three distinct methods** for simulating an **at-the-money call option** (where “at-the-money” means **$K = S_0 = 1$**) at maturity **T = 1** under the **Heston model**.
 
 This repository aligns with that goal as follows:
 
