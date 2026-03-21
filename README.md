@@ -85,4 +85,4 @@ make NVFLAGS="-O3 -std=c++14 -Iinclude -DHESTON_MC_N_PATHS=65536 -DHESTON_RHO=-0
 
 ## License / attribution
 
-Course code builds on lecture materials; retain author / citation notices in source files where present.
+Based on course materials (instructor: *Lokman A. Abbas-Turki*). **Keep author / course notices** already present in borrowed or adapted source files.
