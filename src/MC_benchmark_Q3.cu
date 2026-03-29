@@ -322,7 +322,7 @@ int main(void) {
 	const int NT = HESTON_Q3_GRID_T;
 	const int NS = HESTON_Q3_GRID_S;
 
-	printf("# Proj2026 Q3 benchmark  Feller: 2*kappa*theta > sigma^2\n");
+	printf("# Proj2026 Q3 benchmark  Feller: 20*kappa*theta > sigma^2\n");
 	printf("# Exact (BK) dt=%g n_steps=%d | Euler dt=%g n=%d | almost fine dt=%g n=%d | almost coarse dt=%g n=%d\n",
 		(double)DT_EXACT, n_exact, (double)DT_EULER, n_euler,
 		(double)DT_ALMOST_FINE, n_af, (double)DT_ALMOST_COARSE, n_ac);
