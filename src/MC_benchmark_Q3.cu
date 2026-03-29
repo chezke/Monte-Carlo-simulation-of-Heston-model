@@ -2,10 +2,14 @@
  * Proj2026 — Question 3: compare GPU times Euler vs almost-exact (exact variance),
  * on a (kappa, theta, sigma) grid with Feller 2*kappa*theta > sigma^2.
  * Also times almost-exact with dt=1/1000 vs dt=1/30.
+ * Broadie–Kaya-style exact scheme (heston_exact_bk_mc.cuh) is the reference “true value”
+ * for pricing bias: err_* = mean_* - mean_exact (same N; MC noise remains).
  *
  * CSV columns:
- *   id,kappa,theta,sigma,feller_lhs_minus_rhs,ms_euler,ms_almost_dt1000,ms_almost_dt1_30,
- *   mean_euler,mean_almost_1000,mean_almost_30
+ *   id,kappa,theta,sigma,feller_gap,
+ *   ms_exact,ms_euler,ms_almost_dt1000,ms_almost_dt1_30,
+ *   mean_exact,mean_euler,mean_almost_1000,mean_almost_30,
+ *   err_euler,err_almost_1000,err_almost_30
  *
  * Build: see repository Makefile / README.md (`make`, outputs `bin/MC_benchmark_Q3`).
  */
@@ -17,6 +21,7 @@
 #include "heston_mc_common.cuh"
 #include "heston_cuda_utils.cuh"
 #include "heston_cir_exact.cuh"
+#include "heston_exact_bk_mc.cuh"
 
 #ifndef USE_ABS_VARIANCE_TRUNC
 #define USE_ABS_VARIANCE_TRUNC 0
@@ -44,6 +49,7 @@
 #define Q3_SIGMA_MAX 1.0f
 
 #define DT_EULER (1.0f / 1000.0f)
+#define DT_EXACT (1.0f / 1000.0f)
 #define DT_ALMOST_FINE (1.0f / 1000.0f)
 #define DT_ALMOST_COARSE (1.0f / 30.0f)
 
@@ -184,6 +190,41 @@ static float lerp(float a, float b, float t) {
 	return a + (b - a) * t;
 }
 
+static void run_timed_exact(
+	float S0, float v0, float K, float T,
+	float dt, int n_steps,
+	float kappa, float theta, float sigma, float rho,
+	curandState* states, int nb, int ntpb, int n_paths,
+	float* sum,
+	unsigned long long seed_tag,
+	float* out_mean,
+	float* out_ms) {
+
+	TEST_CUDA(cudaMemset(sum, 0, 2 * sizeof(float)));
+	init_curand_state_k<<<nb, ntpb>>>(states, HESTON_MC_CURAND_SEED + seed_tag + 12000000ULL);
+	TEST_CUDA(cudaGetLastError());
+	TEST_CUDA(cudaDeviceSynchronize());
+
+	cudaEvent_t ev0, ev1;
+	TEST_CUDA(cudaEventCreate(&ev0));
+	TEST_CUDA(cudaEventCreate(&ev1));
+	size_t shmem = 2 * (size_t)ntpb * sizeof(float);
+
+	TEST_CUDA(cudaEventRecord(ev0));
+	heston_exact_mc_k<<<nb, ntpb, shmem>>>(
+		S0, v0, K, T, dt, n_steps, kappa, theta, sigma, rho, states, sum, n_paths);
+	TEST_CUDA(cudaGetLastError());
+	TEST_CUDA(cudaDeviceSynchronize());
+	TEST_CUDA(cudaEventRecord(ev1));
+	TEST_CUDA(cudaEventSynchronize(ev1));
+	float ms = 0.f;
+	TEST_CUDA(cudaEventElapsedTime(&ms, ev0, ev1));
+	*out_ms = ms;
+	*out_mean = sum[0];
+	TEST_CUDA(cudaEventDestroy(ev0));
+	TEST_CUDA(cudaEventDestroy(ev1));
+}
+
 static void run_timed_euler(
 	float S0, float v0, float r, float K,
 	float dt, int n_steps,
@@ -273,6 +314,7 @@ int main(void) {
 	TEST_CUDA(cudaMalloc(&states, (size_t)grid_threads * sizeof(curandState)));
 
 	const int n_euler = (int)lroundf(T / DT_EULER);
+	const int n_exact = (int)lroundf(T / DT_EXACT);
 	const int n_af = (int)lroundf(T / DT_ALMOST_FINE);
 	const int n_ac = (int)lroundf(T / DT_ALMOST_COARSE);
 
@@ -281,10 +323,12 @@ int main(void) {
 	const int NS = HESTON_Q3_GRID_S;
 
 	printf("# Proj2026 Q3 benchmark  Feller: 2*kappa*theta > sigma^2\n");
-	printf("# Euler dt=%g n_steps=%d | almost fine dt=%g n=%d | almost coarse dt=%g n=%d\n",
-		(double)DT_EULER, n_euler, (double)DT_ALMOST_FINE, n_af, (double)DT_ALMOST_COARSE, n_ac);
-	printf("# paths=%d rho=%g\n", n_paths, (double)rho);
-	printf("id,kappa,theta,sigma,feller_gap,ms_euler,ms_almost_dt1000,ms_almost_dt1_30,mean_euler,mean_almost_1000,mean_almost_30\n");
+	printf("# Exact (BK) dt=%g n_steps=%d | Euler dt=%g n=%d | almost fine dt=%g n=%d | almost coarse dt=%g n=%d\n",
+		(double)DT_EXACT, n_exact, (double)DT_EULER, n_euler,
+		(double)DT_ALMOST_FINE, n_af, (double)DT_ALMOST_COARSE, n_ac);
+	printf("# paths=%d rho=%g  err_* = mean_* - mean_exact (MC reference)\n", n_paths, (double)rho);
+	printf("id,kappa,theta,sigma,feller_gap,ms_exact,ms_euler,ms_almost_dt1000,ms_almost_dt1_30,"
+	       "mean_exact,mean_euler,mean_almost_1000,mean_almost_30,err_euler,err_almost_1000,err_almost_30\n");
 
 	int id = 0;
 	for (int ik = 0; ik < NK; ik++) {
@@ -304,9 +348,12 @@ int main(void) {
 
 				unsigned long long tag = (unsigned long long)(id + 1) * 100003ULL;
 
-				float ms_e = 0.f, ms_a1 = 0.f, ms_a30 = 0.f;
-				float mean_e = 0.f, mean_a1 = 0.f, mean_a30 = 0.f;
+				float ms_x = 0.f, ms_e = 0.f, ms_a1 = 0.f, ms_a30 = 0.f;
+				float mean_x = 0.f, mean_e = 0.f, mean_a1 = 0.f, mean_a30 = 0.f;
 
+				run_timed_exact(S0, v0, K, T, DT_EXACT, n_exact,
+					kappa, theta, sigma, rho, states, nb, ntpb, n_paths,
+					sum, tag, &mean_x, &ms_x);
 				run_timed_euler(S0, v0, r, K, DT_EULER, n_euler,
 					kappa, theta, sigma, rho, states, nb, ntpb, n_paths,
 					sum, tag, &mean_e, &ms_e);
@@ -317,10 +364,15 @@ int main(void) {
 					kappa, theta, sigma, rho, states, nb, ntpb, n_paths, sum,
 					tag + 7777777ULL, &mean_a30, &ms_a30);
 
-				printf("%d,%.6g,%.6g,%.6g,%.6g,%.6g,%.6g,%.6g,%.8g,%.8g,%.8g\n",
+				double err_e = (double)mean_e - (double)mean_x;
+				double err_a1 = (double)mean_a1 - (double)mean_x;
+				double err_a30 = (double)mean_a30 - (double)mean_x;
+
+				printf("%d,%.6g,%.6g,%.6g,%.6g,%.6g,%.6g,%.6g,%.6g,%.8g,%.8g,%.8g,%.8g,%.8g,%.8g,%.8g\n",
 					id, (double)kappa, (double)theta, (double)sigma,
-					(double)(feller_lhs - feller_rhs), (double)ms_e, (double)ms_a1, (double)ms_a30,
-					(double)mean_e, (double)mean_a1, (double)mean_a30);
+					(double)(feller_lhs - feller_rhs), (double)ms_x, (double)ms_e, (double)ms_a1, (double)ms_a30,
+					(double)mean_x, (double)mean_e, (double)mean_a1, (double)mean_a30,
+					err_e, err_a1, err_a30);
 				fflush(stdout);
 				id++;
 			}
@@ -328,7 +380,8 @@ int main(void) {
 	}
 
 	fprintf(stderr, "# Done. Rows printed: %d\n", id);
-	fprintf(stderr, "# Interpretation: coarser dt=1/30 for almost-exact -> fewer CIR/Poisson/Gamma steps -> usually faster (ms_almost lower) but mean_almost_30 may differ from mean_almost_1000 (time discretization error / bias).\n");
+	fprintf(stderr, "# Reference: mean_exact (Broadie–Kaya-style exact). err_* is bias+MC noise vs that run; increase N_PATHS to shrink MC noise.\n");
+	fprintf(stderr,        "# dt=1/30 almost-exact: fewer steps -> often faster; |err_almost_30| may exceed |err_almost_1000| (logS discretization).\n");
 
 	TEST_CUDA(cudaFree(states));
 	TEST_CUDA(cudaFree(sum));
