@@ -49,7 +49,7 @@ Executables are written to `bin/`:
 | `MC_Euler` | Euler discretization Monte Carlo (Q1) |
 | `MC_exact` | Exact simulation of variance (Broadie–Kaya), including steps 1–3: variance sampling, integral computation, and log-price reconstruction (Q2) |
 | `MC_almost` | Almost-exact log-price scheme based on exact variance simulation (Q3) |
-| `MC_benchmark_Q3` | Benchmark comparing Euler and almost-exact methods, including execution time and step size comparison (**Δt = 1/1000** vs **1/30**) |
+| `MC_benchmark_Q3` | Benchmark: Broadie–Kaya **exact** (reference mean) vs Euler and almost-exact; times; **Δt = 1/1000** vs **1/30** for almost-exact; CSV includes `err_* = mean_* - mean_exact` |
 
 ### Manual `nvcc` (equivalent)
 
