@@ -1,6 +1,6 @@
 /*
  * Proj2026 — Question 3: compare GPU times Euler vs almost-exact (exact variance),
- * on a (kappa, theta, sigma) grid with Feller 2*kappa*theta > sigma^2.
+ * on a (kappa, theta, sigma) grid with 20*kappa*theta > sigma^2.
  * Also times almost-exact with dt=1/1000 vs dt=1/30.
  * Broadie–Kaya-style exact scheme (heston_exact_bk_mc.cuh) is the reference “true value”
  * for pricing bias: err_* = mean_* - mean_exact (same N; MC noise remains).
