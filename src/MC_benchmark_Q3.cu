@@ -341,7 +341,7 @@ int main(void) {
 				float ts = (NS <= 1) ? 0.f : (float)is / (float)(NS - 1);
 				float sigma = lerp(Q3_SIGMA_MIN, Q3_SIGMA_MAX, ts);
 
-				float feller_lhs = 2.f * kappa * theta;
+				float feller_lhs = 20.f * kappa * theta;
 				float feller_rhs = sigma * sigma;
 				if (!(feller_lhs > feller_rhs))
 					continue;
